@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "AI Article Warning",
+  "version": "1.0.0",
+  "description": "ZennやQiitaでAI執筆っぽい記事を検出して警告",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://zenn.dev/*",
+    "https://qiita.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://zenn.dev/*",
+        "https://qiita.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
