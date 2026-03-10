@@ -4,33 +4,37 @@
   position: relative;
   padding: 16px 20px;
   margin: 16px 0;
-  border-radius: 8px;
+  border-radius: 12px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10000;
+  font-size: 15px;
+  line-height: 1.6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  z-index: 999999;
+  border: 2px solid;
 }
 
 /* 警告レベル: 高 */
 .ai-warning-high {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
   color: white;
-  border-left: 4px solid #c92a2a;
+  border-color: #ff6666;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* 警告レベル: 中 */
 .ai-warning-medium {
-  background: linear-gradient(135deg, #ffd43b 0%, #fcc419 100%);
-  color: #333;
-  border-left: 4px solid #e67700;
+  background: linear-gradient(135deg, #ff9500 0%, #ff6600 100%);
+  color: white;
+  border-color: #ffaa44;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* 警告レベル: 低 */
 .ai-warning-low {
-  background: linear-gradient(135deg, #69db7c 0%, #51cf66 100%);
+  background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
   color: white;
-  border-left: 4px solid #2f9e44;
+  border-color: #4cd964;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .ai-warning-content {
@@ -40,46 +44,51 @@
 }
 
 .ai-warning-icon {
-  font-size: 24px;
+  font-size: 28px;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .ai-warning-text {
   flex: 1;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
 }
 
 .ai-warning-close {
   background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 4px;
-  width: 28px;
-  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
-  color: inherit;
+  transition: all 0.2s;
+  color: white;
+  font-weight: bold;
 }
 
 .ai-warning-close:hover {
   background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
 }
 
 .ai-warning-details {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .ai-warning-details p {
-  margin: 0 0 8px 0;
-  font-weight: 600;
-  opacity: 0.9;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+  opacity: 0.95;
 }
 
 .ai-warning-details ul {
@@ -88,8 +97,8 @@
 }
 
 .ai-warning-details li {
-  margin: 4px 0;
-  opacity: 0.85;
+  margin: 6px 0;
+  opacity: 0.9;
 }
 
 /* Zenn特有の調整 */
@@ -99,29 +108,43 @@
 
 /* Qiita特有の調整 */
 .qiita .ai-warning-banner {
-  margin: 16px 0;
-}
-
-/* ダークモード対応 */
-@media (prefers-color-scheme: dark) {
-  .ai-warning-medium {
-    background: linear-gradient(135deg, #fab005 0%, #f08c00 100%);
-    color: #1a1a1a;
-  }
+  margin: 20px 0;
 }
 
 /* アニメーション */
 @keyframes aiWarningSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes aiWarningPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(255, 255, 255, 0.2);
   }
 }
 
 .ai-warning-banner {
-  animation: aiWarningSlideIn 0.3s ease-out;
+  animation: aiWarningSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ai-warning-high {
+  animation: aiWarningSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), aiWarningPulse 2s infinite;
+}
+
+/* 固定位置バナー（オプション） */
+.ai-warning-sticky {
+  position: sticky;
+  top: 0;
+  margin: 0 0 20px 0;
+  border-radius: 0 0 12px 12px;
+  z-index: 999999;
 }
