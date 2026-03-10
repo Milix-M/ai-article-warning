@@ -10,22 +10,21 @@
   // AIっぽいパターン（正規表現）
   const AI_PATTERNS = [
     // 過度に丁寧・抽象的な表現
-    /\n?[（(]?\n?\s*(?:ご)?存知の通り\s*\n?[)）]?/gi,
-    /\n?[（(]?\n?\s*皆様ご存知の通り\s*\n?[)）]?/gi,
-    /\n?[（(]?\n?\s*周知の通り\s*\n?[)）]?/gi,
+    /存知の通り/g,
+    /皆様|みなさま/g,
+    /周知の通り/g,
     // 「〜でしょう」が連続
-    /でしょう[。！]?/g,
+    /でしょう/g,
     // 「〜かもしれません」が多い
     /かもしれません/g,
     // 抽象的な接続詞・フレーズ
-    /\n\s*まず\s*\n/g,
-    /\n\s*次に\s*\n/g,
-    /\n\s*さらに\s*\n/g,
-    /\n\s*最後に\s*\n/g,
-    // 日本語として不自然な表現
-    /\n\s*結論として\s*\n/g,
-    /\n\s*要約すると\s*\n/g,
-    /\n\s*以上となります\s*\n/g,
+    /\n\s*まず/g,
+    /\n\s*次に/g,
+    /\n\s*さらに/g,
+    /\n\s*最後に/g,
+    /結論として/g,
+    /要約すると/g,
+    /以上となります/g,
   ];
 
   // スコア計算
@@ -44,7 +43,7 @@
         
         score += weight;
         matches.push({
-          pattern: pattern.source.substring(0, 30) + '...',
+          pattern: pattern.source,
           count: patternMatches.length
         });
       }
@@ -79,7 +78,7 @@
     
     let severity = 'low';
     if (score >= 15) severity = 'high';
-    else if (score >= 8) severity = 'medium';
+    else if (score >= 5) severity = 'medium';
 
     const messages = {
       high: '⚠️ この記事はAI執筆の可能性が高いです',
@@ -115,35 +114,72 @@
 
   // Zennの記事ページかチェック
   function isZennArticle() {
-    return location.hostname === 'zenn.dev' && 
-           location.pathname.match(/^\/[\w-]+\/articles\/[\w-]+$/);
+    const isZenn = location.hostname === 'zenn.dev' && 
+                   location.pathname.includes('/articles/');
+    console.log('[AI Article Warning] Zenn判定:', isZenn, location.hostname, location.pathname);
+    return isZenn;
   }
 
   // Qiitaの記事ページかチェック
   function isQiitaArticle() {
-    return location.hostname === 'qiita.com' && 
-           location.pathname.match(/^\/[\w-]+\/items\/[\w-]+$/);
+    const isQiita = location.hostname === 'qiita.com' && 
+                    location.pathname.includes('/items/');
+    console.log('[AI Article Warning] Qiita判定:', isQiita, location.hostname, location.pathname);
+    return isQiita;
   }
 
   // 記事本文を取得
   function getArticleText() {
     let articleText = '';
+    let selectorUsed = '';
     
     if (isZennArticle()) {
-      // Zenn: .article-body または main 内の本文
-      const article = document.querySelector('.article-body') || 
-                      document.querySelector('article') ||
-                      document.querySelector('main');
-      if (article) {
-        articleText = article.innerText;
+      // Zenn: 複数のセレクタを試す
+      const selectors = [
+        'article[class*="Article_body"]',
+        '.article-body',
+        'article',
+        'main article',
+        '[class*="content"]'
+      ];
+      
+      for (const selector of selectors) {
+        const article = document.querySelector(selector);
+        if (article) {
+          articleText = article.innerText;
+          selectorUsed = selector;
+          console.log('[AI Article Warning] Zenn: セレクタヒット:', selector, '文字数:', articleText.length);
+          break;
+        }
       }
     } else if (isQiitaArticle()) {
-      // Qiita: .it-MdContent または article 内の本文
-      const article = document.querySelector('.it-MdContent') || 
-                      document.querySelector('[data-testid="article-body"]') ||
-                      document.querySelector('article');
-      if (article) {
-        articleText = article.innerText;
+      // Qiita: 複数のセレクタを試す
+      const selectors = [
+        '[data-testid="article-body"]',
+        '.it-MdContent',
+        'article',
+        '[class*="article_body"]',
+        'main [class*="content"]'
+      ];
+      
+      for (const selector of selectors) {
+        const article = document.querySelector(selector);
+        if (article) {
+          articleText = article.innerText;
+          selectorUsed = selector;
+          console.log('[AI Article Warning] Qiita: セレクタヒット:', selector, '文字数:', articleText.length);
+          break;
+        }
+      }
+    }
+
+    if (!articleText) {
+      console.log('[AI Article Warning] 記事本文が取得できませんでした。試行したセレクタ:', selectorUsed);
+      // フォールバック: body全体から取得
+      const bodyText = document.body.innerText;
+      if (bodyText.length > 500) {
+        console.log('[AI Article Warning] body.innerTextをフォールバック使用:', bodyText.length);
+        return bodyText;
       }
     }
 
@@ -153,44 +189,82 @@
   // バナーを挿入する場所を取得
   function getInsertTarget() {
     if (isZennArticle()) {
-      // Zenn: タイトルの下か、本文の前
-      return document.querySelector('.article-body') ||
-             document.querySelector('article') ||
-             document.querySelector('main');
+      const selectors = [
+        'article[class*="Article_body"]',
+        '.article-body',
+        'article',
+        'main article',
+        'main'
+      ];
+      for (const selector of selectors) {
+        const target = document.querySelector(selector);
+        if (target && target.parentNode) {
+          console.log('[AI Article Warning] Zenn: 挿入ターゲット:', selector);
+          return target;
+        }
+      }
     } else if (isQiitaArticle()) {
-      // Qiita: タイトルの下
-      return document.querySelector('.it-MdContent') ||
-             document.querySelector('[data-testid="article-body"]') ||
-             document.querySelector('article');
+      const selectors = [
+        '[data-testid="article-body"]',
+        '.it-MdContent',
+        'article',
+        'main'
+      ];
+      for (const selector of selectors) {
+        const target = document.querySelector(selector);
+        if (target && target.parentNode) {
+          console.log('[AI Article Warning] Qiita: 挿入ターゲット:', selector);
+          return target;
+        }
+      }
     }
     return null;
   }
 
   // メイン処理
   function analyzeArticle() {
+    console.log('[AI Article Warning] analyzeArticle開始');
+    
     // すでにバナーがある場合はスキップ
     if (document.getElementById('ai-article-warning-banner')) {
+      console.log('[AI Article Warning] 既にバナーあり、スキップ');
+      return;
+    }
+
+    // ZennでもQiitaでもない場合はスキップ
+    if (!isZennArticle() && !isQiitaArticle()) {
+      console.log('[AI Article Warning] 対象サイトではありません');
       return;
     }
 
     const text = getArticleText();
     if (!text || text.length < 100) {
-      console.log('[AI Article Warning] 記事本文が取得できませんでした');
+      console.log('[AI Article Warning] 記事本文が取得できませんでした。文字数:', text?.length || 0);
       return;
     }
 
-    console.log('[AI Article Warning] 記事解析開始...');
+    console.log('[AI Article Warning] 記事解析開始...文字数:', text.length);
     const { score, matches } = calculateAIScore(text);
     console.log('[AI Article Warning] AIスコア:', score, matches);
 
-    // スコアが一定以上なら警告表示
-    if (score >= 5) {
+    // スコアが一定以上なら警告表示（低くして常に表示）
+    if (score >= 3) {
       const target = getInsertTarget();
       if (target) {
-        const banner = createWarningBanner(score, matches);
-        target.parentNode.insertBefore(banner, target);
-        console.log('[AI Article Warning] 警告バナーを表示しました');
+        try {
+          const banner = createWarningBanner(score, matches);
+          target.parentNode.insertBefore(banner, target);
+          console.log('[AI Article Warning] 警告バナーを表示しました');
+        } catch (e) {
+          console.error('[AI Article Warning] バナー表示エラー:', e);
+          // フォールバック: bodyの先頭に挿入
+          document.body.insertBefore(createWarningBanner(score, matches), document.body.firstChild);
+        }
+      } else {
+        console.log('[AI Article Warning] 挿入ターゲットが見つかりません');
       }
+    } else {
+      console.log('[AI Article Warning] スコアが閾値未満:', score);
     }
   }
 
@@ -199,8 +273,12 @@
     document.addEventListener('DOMContentLoaded', analyzeArticle);
   } else {
     // すでに読み込み完了している場合
-    setTimeout(analyzeArticle, 1000);
+    console.log('[AI Article Warning] 既にDOMContentLoaded済み、即時実行');
+    analyzeArticle();
   }
+
+  // フォールバック: 3秒後にも実行（遅延ロード対応）
+  setTimeout(analyzeArticle, 3000);
 
   // SPA対応: URL変更を監視
   let lastUrl = location.href;
