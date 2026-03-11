@@ -186,27 +186,22 @@
     return articleText;
   }
 
-  // バナーを挿入する場所を取得
-  function getInsertTarget() {
+  // バナーを挿入する場所を取得して挿入
+  function insertBanner(banner) {
     if (isZennArticle()) {
-      // Zenn: タグリストの上に挿入
-      const selectors = [
-        '[class*="Article_header"]', // 記事ヘッダー
-        '[class*="header"]', 
-        'h1[class*="title"]', // タイトル
-        '[class*="TagList"]', // タグリスト
-        '[class*="tags"]', 
-        'article[class*="Article_body"]',
-        'article'
-      ];
-      for (const selector of selectors) {
-        const target = document.querySelector(selector);
-        if (target) {
-          console.log('[AI Article Warning] Zenn: 挿入ターゲット:', selector);
-          return target;
+      // Zenn: H1タイトルの直後に挿入
+      const h1 = document.querySelector('h1');
+      if (h1 && h1.parentNode) {
+        if (h1.nextSibling) {
+          h1.parentNode.insertBefore(banner, h1.nextSibling);
+        } else {
+          h1.parentNode.appendChild(banner);
         }
+        console.log('[AI Article Warning] Zenn: H1の直後にバナーを挿入');
+        return true;
       }
     } else if (isQiitaArticle()) {
+      // Qiita: 記事ヘッダーの後か、本文の前に挿入
       const selectors = [
         '[data-testid="article-body"]',
         '.it-MdContent',
@@ -215,13 +210,14 @@
       ];
       for (const selector of selectors) {
         const target = document.querySelector(selector);
-        if (target) {
-          console.log('[AI Article Warning] Qiita: 挿入ターゲット:', selector);
-          return target;
+        if (target && target.parentNode) {
+          target.parentNode.insertBefore(banner, target);
+          console.log('[AI Article Warning] Qiita: バナーを挿入', selector);
+          return true;
         }
       }
     }
-    return null;
+    return false;
   }
 
   // メイン処理
@@ -252,24 +248,15 @@
 
     // スコアが一定以上なら警告表示（低くして常に表示）
     if (score >= 3) {
-      const target = getInsertTarget();
-      if (target) {
-        try {
-          const banner = createWarningBanner(score, matches);
-          // ヘッダー要素の場合は後ろに挿入、それ以外は前に挿入
-          if (target.tagName === 'H1' || target.className?.includes('header') || target.className?.includes('Header')) {
-            target.parentNode.insertBefore(banner, target.nextSibling);
-          } else {
-            target.parentNode.insertBefore(banner, target);
-          }
-          console.log('[AI Article Warning] 警告バナーを表示しました');
-        } catch (e) {
-          console.error('[AI Article Warning] バナー表示エラー:', e);
-          // フォールバック: bodyの先頭に挿入
-          document.body.insertBefore(createWarningBanner(score, matches), document.body.firstChild);
-        }
+      const banner = createWarningBanner(score, matches);
+      const inserted = insertBanner(banner);
+      
+      if (inserted) {
+        console.log('[AI Article Warning] 警告バナーを表示しました');
       } else {
-        console.log('[AI Article Warning] 挿入ターゲットが見つかりません');
+        console.log('[AI Article Warning] バナー挿入に失敗');
+        // フォールバック: bodyの先頭に挿入
+        document.body.insertBefore(banner, document.body.firstChild);
       }
     } else {
       console.log('[AI Article Warning] スコアが閾値未満:', score);
