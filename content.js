@@ -7,81 +7,44 @@
 
   console.log('[AI Article Warning] コンテンツスクリプト読み込み完了');
 
-  // AIっぽいパターン（正規表現）
-  const AI_PATTERNS = [
-    // 過度に丁寧・抽象的な表現
-    /存知の通り/g,
-    /皆様|みなさま/g,
-    /周知の通り/g,
-    // 「〜でしょう」が連続
-    /でしょう/g,
-    // 「〜かもしれません」が多い
-    /かもしれません/g,
-    // 機械的な締めくくり
-    /以上となります/g,
-  ];
-
   // スコア計算
   function calculateAIScore(text) {
     let score = 0;
     let matches = [];
 
-    AI_PATTERNS.forEach((pattern, index) => {
-      const patternMatches = text.match(pattern);
-      if (patternMatches) {
-        // パターンによって重み付け
-        let weight = 1;
-        if (index <= 2) weight = 3; // 「〜の通り」系は重い
-        if (index === 3) weight = Math.min(patternMatches.length, 5); // 「でしょう」は回数で重み
-        if (index === 4) weight = Math.min(patternMatches.length, 5); // 「かもしれません」も回数で
-        
-        score += weight;
-        
-        // 検出例を取得（最大3つ）
-        const examples = patternMatches.slice(0, 3).map(m => {
-          // 周囲の文脈も取得（前後20文字）
-          const idx = text.indexOf(m);
-          const start = Math.max(0, idx - 20);
-          const end = Math.min(text.length, idx + m.length + 20);
-          return '...' + text.substring(start, end).replace(/\n/g, ' ') + '...';
-        });
-        
-      matches.push({
-          pattern: pattern.source,
-          count: patternMatches.length,
-          examples: examples
-        });
-      }
-    });
-
-    // 文の長さの平均が長すぎる場合もAIっぽい
+    // 【1】文の長さの平均が長すぎる場合
     const sentences = text.split(/[。！？\n]/).filter(s => s.trim().length > 0);
     if (sentences.length > 0) {
       const avgLength = sentences.reduce((sum, s) => sum + s.length, 0) / sentences.length;
       if (avgLength > 80) {
         score += 2;
-        matches.push({ pattern: '長文の多用', count: Math.round(avgLength) });
+        // 長文の例を取得
+        const longSentences = sentences.filter(s => s.length > 80).slice(0, 2);
+        matches.push({ 
+          pattern: '長文の多用', 
+          count: Math.round(avgLength),
+          examples: longSentences
+        });
       }
     }
 
-    // 【新】強調表現（**や*）の多用
-    // **text** = 太字、*text* = 斜体（単語境界で囲まれたもののみ）
+    // 【2】強調表現（**や*）の多用
     const boldMatches = text.match(/\*\*[\w\sぁ-んァ-ン一-龠]{2,30}\*\*/g) || [];
-    // *text* の形式で、**text** を除外（単純な単語のみ）
     const italicMatches = text.match(/\*[\wぁ-んァ-ン一-龠]{2,20}\*/g) || [];
     const emphasisCount = boldMatches.length + italicMatches.length;
     if (emphasisCount >= 5) {
       score += 3;
-      matches.push({ pattern: '強調表現の多用', count: emphasisCount });
+      const examples = [...boldMatches, ...italicMatches].slice(0, 3);
+      matches.push({ pattern: '強調表現の多用', count: emphasisCount, examples });
     }
 
-    // 【新】ダッシュ（—）の多用（文中でも検出）
-    // 「タイトル — 説明」形式（—の前後にスペースあり）
+    // 【3】ダッシュ（—）の多用
     const dashPattern = /[^\n—]{2,30}[\s]+[—\-][\s]+[^\n]+/gu;
     const dashMatches = text.match(dashPattern) || [];
     if (dashMatches.length >= 2) {
-      score += 5; // ポイント高め
-      matches.push({ pattern: 'ダッシュ形式の多用', count: dashMatches.length });
+      score += 5;
+      const examples = dashMatches.slice(0, 3);
+      matches.push({ pattern: 'ダッシュ形式の多用', count: dashMatches.length, examples });
     }
 
     return { score, matches };
@@ -115,7 +78,7 @@
             ${matches.slice(0, 5).map(m => `
               <li>
                 <strong>${m.pattern}: ${m.count}回</strong>
-                ${m.examples ? '<br><small style="opacity:0.8">' + m.examples.map(e => '「' + e.substring(0, 30) + (e.length > 30 ? '...' : '') + '」').join('<br>') + '</small>' : ''}
+                ${m.examples ? '<br><small style="opacity:0.8">' + m.examples.map(e => '「' + (typeof e === 'string' ? e : e.toString()).substring(0, 40) + '」').join('<br>') + '</small>' : ''}
               </li>
             `).join('')}
           </ul>
