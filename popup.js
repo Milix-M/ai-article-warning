@@ -71,15 +71,25 @@ function isTargetSite(url) {
 async function checkCurrentPage() {
   const statusBox = document.getElementById('current-page-status');
   const statusHelp = document.getElementById('status-help');
+  const analyzeBtn = document.getElementById('analyze-btn');
   
   try {
+    // scripting APIが利用可能かチェック
+    if (!chrome.scripting) {
+      statusBox.className = 'status-box status-info';
+      statusBox.innerHTML = '⚠️ 拡張機能を再読み込みしてください';
+      if (statusHelp) statusHelp.textContent = '設定が変更されました。chrome://extensions/ で拡張機能を一度無効にしてから再度有効にしてください。';
+      if (analyzeBtn) analyzeBtn.disabled = true;
+      return;
+    }
+
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
-    if (!tab.url || !isTargetSite(tab.url)) {
+    if (!tab || !tab.url || !isTargetSite(tab.url)) {
       statusBox.className = 'status-box status-info';
       statusBox.innerHTML = '💤 ZennまたはQiitaの記事ページで動作します';
       if (statusHelp) statusHelp.textContent = '記事ページを開くと自動で分析されます';
-      document.getElementById('analyze-btn').disabled = true;
+      if (analyzeBtn) analyzeBtn.disabled = true;
       return;
     }
 

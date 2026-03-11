@@ -5,7 +5,8 @@
   "description": "ZennやQiitaでAI執筆っぽい記事を検出して警告",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
     "https://zenn.dev/*",
