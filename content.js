@@ -17,13 +17,7 @@
     /でしょう/g,
     // 「〜かもしれません」が多い
     /かもしれません/g,
-    // 抽象的な接続詞・フレーズ
-    /\n\s*まず/g,
-    /\n\s*次に/g,
-    /\n\s*さらに/g,
-    /\n\s*最後に/g,
-    /結論として/g,
-    /要約すると/g,
+    // 機械的な締めくくり
     /以上となります/g,
   ];
 
@@ -59,15 +53,6 @@
       }
     }
 
-    // 「です」「ます」調の徹底具合
-    const desuMasuCount = (text.match(/です[。\n]/g) || []).length + 
-                          (text.match(/ます[。\n]/g) || []).length;
-    const totalSentences = sentences.length;
-    if (totalSentences > 5 && desuMasuCount / totalSentences > 0.9) {
-      score += 2;
-      matches.push({ pattern: '過度に整った敬体', count: desuMasuCount });
-    }
-
     // 【新】強調表現（**や*）の多用
     // **text** = 太字、*text* = 斜体（単語境界で囲まれたもののみ）
     const boldMatches = text.match(/\*\*[\w\sぁ-んァ-ン一-龠]{2,30}\*\*/g) || [];
@@ -79,17 +64,13 @@
       matches.push({ pattern: '強調表現の多用', count: emphasisCount });
     }
 
-    // 【新】絵文字リスト形式（・🚀 概要: 説明）または（概要 — 説明）
-    // 行頭の・または- に続いて絵文字または文字が来て、:か：または—で区切られているパターン
-    const emojiListPattern = /^[・\-]\s*[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}][^:：]*[:：]/gmu;
+    // 【新】ダッシュ（—）の多用（文中でも検出）
     // 「タイトル — 説明」形式（—の前後にスペースあり）
-    const dashListPattern = /^[^\n—]{2,30}[\s]+[—\-][\s]+[^\n]+$/gmu;
-    const emojiListMatches = text.match(emojiListPattern) || [];
-    const dashListMatches = text.match(dashListPattern) || [];
-    const totalListMatches = emojiListMatches.length + dashListMatches.length;
-    if (totalListMatches >= 3) {
-      score += 3;
-      matches.push({ pattern: 'リスト形式（絵文字または—）', count: totalListMatches });
+    const dashPattern = /[^\n—]{2,30}[\s]+[—\-][\s]+[^\n]+/gu;
+    const dashMatches = text.match(dashPattern) || [];
+    if (dashMatches.length >= 2) {
+      score += 5; // ポイント高め
+      matches.push({ pattern: 'ダッシュ形式の多用', count: dashMatches.length });
     }
 
     return { score, matches };
