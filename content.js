@@ -189,15 +189,11 @@
   // バナーを挿入する場所を取得して挿入
   function insertBanner(banner) {
     if (isZennArticle()) {
-      // Zenn: タグリストの直後に挿入
+      // Zenn: タグリストの直前（上）に挿入
       const topicsContainer = document.querySelector('[class*="View_topics"], [class*="topics"]');
       if (topicsContainer && topicsContainer.parentNode) {
-        if (topicsContainer.nextSibling) {
-          topicsContainer.parentNode.insertBefore(banner, topicsContainer.nextSibling);
-        } else {
-          topicsContainer.parentNode.appendChild(banner);
-        }
-        console.log('[AI Article Warning] Zenn: タグリストの直後にバナーを挿入');
+        topicsContainer.parentNode.insertBefore(banner, topicsContainer);
+        console.log('[AI Article Warning] Zenn: タグリストの上にバナーを挿入');
         return true;
       }
       
