@@ -112,13 +112,12 @@
     return isQiita;
   }
 
-  // 記事本文を取得
+  // 記事本文を取得（コードブロック除外）
   function getArticleText() {
     let articleText = '';
     let selectorUsed = '';
     
     if (isZennArticle()) {
-      // Zenn: 複数のセレクタを試す
       const selectors = [
         'article[class*="Article_body"]',
         '.article-body',
@@ -130,14 +129,14 @@
       for (const selector of selectors) {
         const article = document.querySelector(selector);
         if (article) {
-          articleText = article.innerText;
+          // コードブロックを除外してテキストを取得
+          articleText = getTextWithoutCodeBlocks(article);
           selectorUsed = selector;
           console.log('[AI Article Warning] Zenn: セレクタヒット:', selector, '文字数:', articleText.length);
           break;
         }
       }
     } else if (isQiitaArticle()) {
-      // Qiita: 複数のセレクタを試す
       const selectors = [
         '[data-testid="article-body"]',
         '.it-MdContent',
@@ -149,7 +148,8 @@
       for (const selector of selectors) {
         const article = document.querySelector(selector);
         if (article) {
-          articleText = article.innerText;
+          // コードブロックを除外してテキストを取得
+          articleText = getTextWithoutCodeBlocks(article);
           selectorUsed = selector;
           console.log('[AI Article Warning] Qiita: セレクタヒット:', selector, '文字数:', articleText.length);
           break;
@@ -159,7 +159,6 @@
 
     if (!articleText) {
       console.log('[AI Article Warning] 記事本文が取得できませんでした。試行したセレクタ:', selectorUsed);
-      // フォールバック: body全体から取得
       const bodyText = document.body.innerText;
       if (bodyText.length > 500) {
         console.log('[AI Article Warning] body.innerTextをフォールバック使用:', bodyText.length);
@@ -168,6 +167,29 @@
     }
 
     return articleText;
+  }
+
+  // コードブロックを除外してテキストを取得
+  function getTextWithoutCodeBlocks(element) {
+    // 要素をクローンして操作
+    const clone = element.cloneNode(true);
+    
+    // コードブロック要素を削除
+    const codeSelectors = [
+      'pre',
+      'code',
+      '[class*="code"]',
+      '[class*="Code"]',
+      '[class*="highlight"]',
+      '[class*="prism"]'
+    ];
+    
+    codeSelectors.forEach(selector => {
+      const codeBlocks = clone.querySelectorAll(selector);
+      codeBlocks.forEach(block => block.remove());
+    });
+    
+    return clone.innerText || '';
   }
 
   // バナーを挿入する場所を取得して挿入
