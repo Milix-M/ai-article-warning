@@ -79,13 +79,17 @@
       matches.push({ pattern: '強調表現の多用', count: emphasisCount });
     }
 
-    // 【新】絵文字リスト形式（・🚀 概要: 説明）
-    // 行頭の・または- に続いて絵文字が来て、:か：で区切られているパターン
+    // 【新】絵文字リスト形式（・🚀 概要: 説明）または（概要 — 説明）
+    // 行頭の・または- に続いて絵文字または文字が来て、:か：または—で区切られているパターン
     const emojiListPattern = /^[・\-]\s*[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}][^:：]*[:：]/gmu;
+    // 「タイトル — 説明」形式（—の前後にスペースあり）
+    const dashListPattern = /^[^\n—]{2,30}[\s]+[—\-][\s]+[^\n]+$/gmu;
     const emojiListMatches = text.match(emojiListPattern) || [];
-    if (emojiListMatches.length >= 3) {
+    const dashListMatches = text.match(dashListPattern) || [];
+    const totalListMatches = emojiListMatches.length + dashListMatches.length;
+    if (totalListMatches >= 3) {
       score += 3;
-      matches.push({ pattern: '絵文字リスト形式', count: emojiListMatches.length });
+      matches.push({ pattern: 'リスト形式（絵文字または—）', count: totalListMatches });
     }
 
     return { score, matches };
