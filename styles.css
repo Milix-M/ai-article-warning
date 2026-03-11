@@ -101,7 +101,7 @@
   opacity: 0.9;
 }
 
-/* アニメーション */
+/* アニメーション（無効化） */
 @keyframes aiWarningSlideIn {
   from {
     opacity: 0;
@@ -113,6 +113,8 @@
   }
 }
 
-.ai-warning-banner {
-  animation: aiWarningSlideIn 0.3s ease-out;
+/* アニメーション無効化 */
+.ai-warning-banner,
+.ai-warning-high {
+  animation: none;
 }
