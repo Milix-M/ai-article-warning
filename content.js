@@ -189,16 +189,19 @@
   // バナーを挿入する場所を取得
   function getInsertTarget() {
     if (isZennArticle()) {
+      // Zenn: タグの上に挿入するため、タグコンテナまたは記事ヘッダーを探す
       const selectors = [
+        '[class*="Article_tags"]', // タグコンテナ
+        '[class*="TagList"]', // タグリスト
+        '[class*="tags"]', 
+        'article header',
         'article[class*="Article_body"]',
         '.article-body',
-        'article',
-        'main article',
-        'main'
+        'article'
       ];
       for (const selector of selectors) {
         const target = document.querySelector(selector);
-        if (target && target.parentNode) {
+        if (target) {
           console.log('[AI Article Warning] Zenn: 挿入ターゲット:', selector);
           return target;
         }
@@ -212,7 +215,7 @@
       ];
       for (const selector of selectors) {
         const target = document.querySelector(selector);
-        if (target && target.parentNode) {
+        if (target) {
           console.log('[AI Article Warning] Qiita: 挿入ターゲット:', selector);
           return target;
         }
@@ -253,7 +256,12 @@
       if (target) {
         try {
           const banner = createWarningBanner(score, matches);
-          target.parentNode.insertBefore(banner, target);
+          // タグコンテナの場合はその前に挿入、それ以外は親ノードの先頭に
+          if (target.className && (target.className.includes('Tag') || target.className.includes('tag'))) {
+            target.parentNode.insertBefore(banner, target);
+          } else {
+            target.parentNode.insertBefore(banner, target);
+          }
           console.log('[AI Article Warning] 警告バナーを表示しました');
         } catch (e) {
           console.error('[AI Article Warning] バナー表示エラー:', e);
