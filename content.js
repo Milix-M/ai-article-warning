@@ -36,9 +36,20 @@
         if (index === 4) weight = Math.min(patternMatches.length, 5); // 「かもしれません」も回数で
         
         score += weight;
-        matches.push({
+        
+        // 検出例を取得（最大3つ）
+        const examples = patternMatches.slice(0, 3).map(m => {
+          // 周囲の文脈も取得（前後20文字）
+          const idx = text.indexOf(m);
+          const start = Math.max(0, idx - 20);
+          const end = Math.min(text.length, idx + m.length + 20);
+          return '...' + text.substring(start, end).replace(/\n/g, ' ') + '...';
+        });
+        
+      matches.push({
           pattern: pattern.source,
-          count: patternMatches.length
+          count: patternMatches.length,
+          examples: examples
         });
       }
     });
@@ -101,7 +112,12 @@
         <div class="ai-warning-details">
           <p>検出されたパターン:</p>
           <ul>
-            ${matches.slice(0, 5).map(m => `<li>${m.pattern}: ${m.count}回</li>`).join('')}
+            ${matches.slice(0, 5).map(m => `
+              <li>
+                <strong>${m.pattern}: ${m.count}回</strong>
+                ${m.examples ? '<br><small style="opacity:0.8">' + m.examples.map(e => '「' + e.substring(0, 30) + (e.length > 30 ? '...' : '') + '」').join('<br>') + '</small>' : ''}
+              </li>
+            `).join('')}
           </ul>
         </div>
       ` : ''}
