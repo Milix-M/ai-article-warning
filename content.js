@@ -189,7 +189,19 @@
   // バナーを挿入する場所を取得して挿入
   function insertBanner(banner) {
     if (isZennArticle()) {
-      // Zenn: H1タイトルの直後に挿入
+      // Zenn: タグリストの直後に挿入
+      const topicsContainer = document.querySelector('[class*="View_topics"], [class*="topics"]');
+      if (topicsContainer && topicsContainer.parentNode) {
+        if (topicsContainer.nextSibling) {
+          topicsContainer.parentNode.insertBefore(banner, topicsContainer.nextSibling);
+        } else {
+          topicsContainer.parentNode.appendChild(banner);
+        }
+        console.log('[AI Article Warning] Zenn: タグリストの直後にバナーを挿入');
+        return true;
+      }
+      
+      // フォールバック: H1の直後
       const h1 = document.querySelector('h1');
       if (h1 && h1.parentNode) {
         if (h1.nextSibling) {
@@ -197,7 +209,7 @@
         } else {
           h1.parentNode.appendChild(banner);
         }
-        console.log('[AI Article Warning] Zenn: H1の直後にバナーを挿入');
+        console.log('[AI Article Warning] Zenn: H1の直後にバナーを挿入（フォールバック）');
         return true;
       }
     } else if (isQiitaArticle()) {
