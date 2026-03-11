@@ -189,14 +189,14 @@
   // バナーを挿入する場所を取得
   function getInsertTarget() {
     if (isZennArticle()) {
-      // Zenn: タグの上に挿入するため、タグコンテナまたは記事ヘッダーを探す
+      // Zenn: タグリストの上に挿入
       const selectors = [
-        '[class*="Article_tags"]', // タグコンテナ
+        '[class*="Article_header"]', // 記事ヘッダー
+        '[class*="header"]', 
+        'h1[class*="title"]', // タイトル
         '[class*="TagList"]', // タグリスト
         '[class*="tags"]', 
-        'article header',
         'article[class*="Article_body"]',
-        '.article-body',
         'article'
       ];
       for (const selector of selectors) {
@@ -256,9 +256,9 @@
       if (target) {
         try {
           const banner = createWarningBanner(score, matches);
-          // タグコンテナの場合はその前に挿入、それ以外は親ノードの先頭に
-          if (target.className && (target.className.includes('Tag') || target.className.includes('tag'))) {
-            target.parentNode.insertBefore(banner, target);
+          // ヘッダー要素の場合は後ろに挿入、それ以外は前に挿入
+          if (target.tagName === 'H1' || target.className?.includes('header') || target.className?.includes('Header')) {
+            target.parentNode.insertBefore(banner, target.nextSibling);
           } else {
             target.parentNode.insertBefore(banner, target);
           }
