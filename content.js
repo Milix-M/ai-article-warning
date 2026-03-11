@@ -119,11 +119,10 @@
     
     if (isZennArticle()) {
       const selectors = [
+        '.znc',  // Zennのマークダウン本文
+        '[class*="View_main"]',  // フォールバック
         'article[class*="Article_body"]',
-        '.article-body',
-        'article',
-        'main article',
-        '[class*="content"]'
+        'article'
       ];
       
       for (const selector of selectors) {
@@ -174,14 +173,13 @@
     // 要素をクローンして操作
     const clone = element.cloneNode(true);
     
-    // コードブロック要素を削除
+    // コードブロック要素を削除（code-lineは除外）
     const codeSelectors = [
       'pre',
-      'code',
-      '[class*="code"]',
-      '[class*="Code"]',
+      'code:not([class*="code-line"])',  // code-lineクラスを持つものは除外
       '[class*="highlight"]',
-      '[class*="prism"]'
+      '[class*="prism"]',
+      'div[class*="codeBlock"]'
     ];
     
     codeSelectors.forEach(selector => {
