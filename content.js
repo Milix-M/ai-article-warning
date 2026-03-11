@@ -68,6 +68,26 @@
       matches.push({ pattern: '過度に整った敬体', count: desuMasuCount });
     }
 
+    // 【新】強調表現（**や*）の多用
+    // **text** = 太字、*text* = 斜体（単語境界で囲まれたもののみ）
+    const boldMatches = text.match(/\*\*[\w\sぁ-んァ-ン一-龠]{2,30}\*\*/g) || [];
+    // *text* の形式で、**text** を除外（単純な単語のみ）
+    const italicMatches = text.match(/\*[\wぁ-んァ-ン一-龠]{2,20}\*/g) || [];
+    const emphasisCount = boldMatches.length + italicMatches.length;
+    if (emphasisCount >= 5) {
+      score += 3;
+      matches.push({ pattern: '強調表現の多用', count: emphasisCount });
+    }
+
+    // 【新】絵文字リスト形式（・🚀 概要: 説明）
+    // 行頭の・または- に続いて絵文字が来て、:か：で区切られているパターン
+    const emojiListPattern = /^[・\-]\s*[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}][^:：]*[:：]/gmu;
+    const emojiListMatches = text.match(emojiListPattern) || [];
+    if (emojiListMatches.length >= 3) {
+      score += 3;
+      matches.push({ pattern: '絵文字リスト形式', count: emojiListMatches.length });
+    }
+
     return { score, matches };
   }
 
