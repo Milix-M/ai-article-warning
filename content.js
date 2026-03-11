@@ -189,15 +189,24 @@
   // バナーを挿入する場所を取得して挿入
   function insertBanner(banner) {
     if (isZennArticle()) {
-      // Zenn: タグリストの直前（上）に挿入
-      const topicsContainer = document.querySelector('[class*="View_topics"], [class*="topics"]');
-      if (topicsContainer && topicsContainer.parentNode) {
-        topicsContainer.parentNode.insertBefore(banner, topicsContainer);
-        console.log('[AI Article Warning] Zenn: タグリストの上にバナーを挿入');
+      // Zenn: View_content の中で View_main の前に挿入
+      const viewContent = document.querySelector('[class*="View_content"]');
+      const viewMain = document.querySelector('[class*="View_main"]');
+      if (viewContent && viewMain) {
+        viewContent.insertBefore(banner, viewMain);
+        console.log('[AI Article Warning] Zenn: View_main の前にバナーを挿入');
         return true;
       }
       
-      // フォールバック: H1の直後
+      // フォールバック: タグリストの上
+      const topicsContainer = document.querySelector('[class*="View_topics"], [class*="topics"]');
+      if (topicsContainer && topicsContainer.parentNode) {
+        topicsContainer.parentNode.insertBefore(banner, topicsContainer);
+        console.log('[AI Article Warning] Zenn: タグリストの上にバナーを挿入（フォールバック）');
+        return true;
+      }
+      
+      // フォールバック2: H1の直後
       const h1 = document.querySelector('h1');
       if (h1 && h1.parentNode) {
         if (h1.nextSibling) {
@@ -205,7 +214,7 @@
         } else {
           h1.parentNode.appendChild(banner);
         }
-        console.log('[AI Article Warning] Zenn: H1の直後にバナーを挿入（フォールバック）');
+        console.log('[AI Article Warning] Zenn: H1の直後にバナーを挿入（フォールバック2）');
         return true;
       }
     } else if (isQiitaArticle()) {
