@@ -45,6 +45,13 @@ header h1 {
   font-weight: 500;
 }
 
+.status-help {
+  margin: 8px 0 0 0;
+  font-size: 11px;
+  color: #868e96;
+  text-align: center;
+}
+
 .status-safe {
   background: #d3f9d8;
   color: #2b8a3e;
