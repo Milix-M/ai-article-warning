@@ -129,8 +129,8 @@ async function checkCurrentPage() {
 
   } catch (error) {
     statusBox.className = 'status-box status-info';
-    statusBox.innerHTML = 'ℹ️ ページにアクセスできません';
-    if (statusHelp) statusHelp.textContent = 'ページが読み込み中、またはアクセスできない状態です。少し待ってから再試行してください。';
+    statusBox.innerHTML = '💡 このページでは分析できません';
+    if (statusHelp) statusHelp.textContent = 'ZennまたはQiitaの記事ページを開いている場合は、ページが完全に読み込まれるまで少し待ってから「今のページを分析」ボタンを押してください。';
     console.error(error);
   }
 }
